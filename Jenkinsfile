@@ -3,25 +3,28 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+      }
     }
 
     stage('Install Dependencies') {
       steps {
-        echo '⬇Installing…'
-        sh 'npm install'
+        echo 'Installing…'
+        bat 'npm install'
       }
     }
 
     stage('Run Tests') {
       steps {
         echo 'Running tests…'
-        sh 'npm test 2>&1 | tee test.log'
+        // redirect both stdout+stderr into test.log
+        bat 'npm test > test.log 2>&1'
       }
       post {
         always {
           emailext(
-            to:   'dev-team@example.com',
+            to: 'dev-team@example.com',
             subject: "Tests ${currentBuild.fullDisplayName}: ${currentBuild.currentResult}",
             body: "<p>Test status: <b>${currentBuild.currentResult}</b></p>",
             attachmentsPattern: 'test.log'
@@ -32,20 +35,20 @@ pipeline {
 
     stage('Generate Coverage') {
       steps {
-        echo 'Coverage…'
-        sh 'npm run coverage || true'
+        echo 'Generating coverage…'
+        bat 'npm run coverage > coverage.log 2>&1 || exit 0'
       }
     }
 
     stage('Security Scan') {
       steps {
-        echo 'Auditing…'
-        sh 'npm audit --audit-level=high 2>&1 | tee audit.log'
+        echo 'Running security audit…'
+        bat 'npm audit --audit-level=high > audit.log 2>&1'
       }
       post {
         always {
           emailext(
-            to:   'security-team@example.com',
+            to: 'security-team@example.com',
             subject: "Security Scan ${currentBuild.fullDisplayName}: ${currentBuild.currentResult}",
             body: "<p>Scan status: <b>${currentBuild.currentResult}</b></p>",
             attachmentsPattern: 'audit.log'
@@ -55,15 +58,23 @@ pipeline {
     }
 
     stage('Deploy to Staging') {
-      steps { echo '🚀 Deploying…' }
+      steps {
+        echo 'Deploying to staging…'
+        bat 'echo (deployment step here)'
+      }
     }
 
     stage('Staging Integration Tests') {
-      steps { echo 'Test on staging…' }
+      steps {
+        echo 'Running staging integration tests…'
+        bat 'echo (staging tests here)'
+      }
     }
   }
 
   post {
-    success { echo 'Pipeline succeeded!' }
+    success {
+      echo 'Pipeline completed successfully!'
+    }
   }
 }
